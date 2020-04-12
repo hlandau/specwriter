@@ -191,7 +191,6 @@
 
 ;;                                                                          {{{1
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (define (xml-top document)
   `(*TOP*
      (*PI* xml-stylesheet "href=\"schspec-iso-xml.css\" type=\"text/css\"")
