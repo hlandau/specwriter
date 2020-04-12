@@ -1,0 +1,82 @@
+@namespace url(https://www.devever.net/ns/schspec-iso);
+@namespace h url(http://www.w3.org/1999/xhtml);
+
+h|html {
+  margin: 0;
+  padding: 1em 3em;
+  font-family: Helvetica, "Neue Haas Grotesk Text Pro", "Neue Haas Grotesk Text", "TeX Gyre Heros", "Helvetica Neue", Arial, sans-serif;
+  text-align: justify;
+}
+
+h|body { margin: 0; padding: 0; }
+h|p { margin: 0; padding: 0; }
+
+clause { display: block; margin-bottom: 1em; counter-reset: para; }
+termdef { display: block; }
+
+clause[kind="informative"] { color: #000080; }
+clause[kind="informative"] > hdr title::before { content: "("; } /* TODO fix this */
+clause[kind="informative"] > hdr title::after { content: ")"; }  /* TODO fix this */
+
+hdr h|h2, hdr h|h3, hdr h|h4, hdr h|h5 { display: inline; font-size: inherit; font-weight: inherit; }
+
+/* TOC */
+toc { display: block; }
+*|*.toc h|ul { list-style: none; padding-left: 1em; }
+*|*.toc h|li { margin: 0; padding: 0; }
+*|*.toc h|a:link { text-decoration: none; }
+*|*.toc h|h2 { font-size: 1em; }
+
+/* PARAGRAPH NUMBERING */
+p::before { content: "¶" counter(para) " "; counter-increment: para; font-size: 0.65em; position: absolute; left: 1.5em; line-height: 2.5; color: #999; }
+clause[kind="informative"] p::before { color: #6060ff; }
+
+/* CLAUSE NUMBERING */
+clause > hdr::before, annex > hdr::before { content: "§ "; }
+clause > hdr, termdef > hdr, annex > hdr { display: block; font-weight: bold; }
+
+/* BLOCKS */
+figure { display: block; text-align: center; }
+figure hdr { display: block; text-align: center; }
+figure:target { outline: dotted 0.2em #ff0000; }
+
+termdef > hdr > title { display: block; }
+
+/* INLINES */
+proword { color: purple; }
+term { color: #005500; }
+term h|a { color: inherit; text-decoration: inherit; }
+procn { font-variant: small-caps; }
+kw { font-family: monospace; }
+
+/* REGBLOCKS */
+regblock { display: block; margin: 0.75em 0 0 0; }
+regblock > rb-titleblock { display: block; }
+regblock > rb-titleblock h|h4 { display: block; border-bottom: solid 1px #000; font-weight: bold; margin-top: 0.5em; background-color: #dadada; padding: 0.2em 0.5em; margin: 0; }
+
+reg { display: block; background-color: #e0e0e0; padding: 0 0.5em 0.5em 0.5em; border-top: solid 1px #aaa; }
+reg > rb-titleblock { display: block; }
+reg > rb-titleblock rb-offset { white-space: pre; font-family: monospace; }
+reg > rb-titleblock rb-offset::before { content: "["; }
+reg > rb-titleblock rb-offset::after { content: "] "; }
+reg > rb-titleblock h|span.lint { display: none; }
+reg > rb-titleblock mnem { float: right; }
+reg > rb-body { font-size: 0.8rem; }
+reg h|h5 { margin: 0; padding: 0; }
+
+reg > rb-body field { display: block; padding-left: 2em; }
+reg > rb-body field > rb-titleblock { display: block; }
+reg > rb-body field > rb-titleblock bitrange { min-width: 3em; text-align: right; padding-right: 1em; display: inline-block; }
+reg > rb-body field > rb-titleblock mnem { font-weight: bold; }
+reg > rb-body field > rb-titleblock rb-title::before { content: " ("; }
+reg > rb-body field > rb-titleblock rb-title::after { content: ")"; }
+reg > rb-body field > rb-body { padding-left: 5em; display: block; }
+reg > rb-body field > rb-titleblock h|span.lint { display: none; }
+reg h|dl, reg h|dt, reg h|dd { display: block; margin: 0; padding: 0; }
+
+reg > field > mnem { display: block; }
+reg > field > rb-access { display: block; }
+reg > field > rb-title { display: block; }
+reg > field > rb-desc { display: block; }
+
+field:target { background-color: #e0c0c0; outline: dotted 0.2em #ff0000; }
