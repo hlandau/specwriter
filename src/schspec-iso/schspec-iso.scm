@@ -188,6 +188,24 @@
 
 (define (number-things s) (number-figures (number-clauses s)))
 
+(define (clauseref id)
+  `(iref (@ (iref ,id) (kind clause)) "§[" ,id "]"))
+
+(define (with-id id x)
+  (sxml-with-attribute x 'id id))
+
+
+;;                                                                          {{{1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define (xlate-termdef e)
+  (match e
+         (('term ('@ . attrs) name descf)
+          (if (equal? (sxml-attribute 'sp e) '(singular))
+              (termdef `(@ (sym ,(sxml-attribute 'sym e)))
+                       (hdr `(title ,name))
+                       (descf))
+              ""))))
+
 
 ;;                                                                          {{{1
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -197,4 +215,4 @@
      (top (@ (@ (*NAMESPACES* (*IMPLICIT* "https://www.devever.net/ns/schspec-iso" *IMPLICIT*))))
           ,document)))
 
-(export top doc docctl docbody doccontent docfront docproper docmain docannex docafter docinfo doctitle doctitleelem docid docidbase docidrev docedition doctimestamp preface clause uclause annex asec hdr uhdr ahdr termdef § §i §a §ai ¶ ¶i p ul ol li figure table tablekey mathb note example tabular tr td th em tt procn kw math footnote footnoteref shall shall-not should should-not may may-not can cannot must number-clauses number-figures number-things xml-top)
+(export top doc docctl docbody doccontent docfront docproper docmain docannex docafter docinfo doctitle doctitleelem docid docidbase docidrev docedition doctimestamp preface clause uclause annex asec hdr uhdr ahdr termdef § §i §a §ai ¶ ¶i p ul ol li figure table tablekey mathb note example tabular tr td th em tt procn kw math footnote footnoteref shall shall-not should should-not may may-not can cannot must number-clauses number-figures number-things clauseref with-id xlate-termdef xml-top)
