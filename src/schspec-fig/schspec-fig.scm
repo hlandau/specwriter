@@ -12,6 +12,7 @@
       (match x
              ('image/svg+xml "svg")
              ('image/png "png")
+             ('application/pdf "pdf")
              (x (error "unknown MIME type" x)))))
 
 (define (fig-type-from-build build)
@@ -76,6 +77,10 @@
          (fig-build-type cmd/file)
          (fig-build-output-type image/svg+xml)
          (fig-build-cmd "dot -Tsvg"))
+       (fig-build
+         (fig-build-type cmd/file)
+         (fig-build-output-type application/pdf)
+         (fig-build-cmd "dot -Tpdf"))
        (fig-build
          (fig-build-type cmd/file)
          (fig-build-output-type image/png)

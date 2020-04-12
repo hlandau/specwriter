@@ -1,6 +1,6 @@
 .PHONY: all enter clean check lint
 
-all: build/example.xhtml build/example.fo.pdf
+all: build/example.xhtml build/example.pdf build/example.fo.pdf
 
 enter:
 	nix-shell -p libxml2 libxslt fop rnv
@@ -27,3 +27,12 @@ build/%.xhtml: build/%.xml ../../src/schspec-iso/style/default/schspec-iso-xhtml
 
 build/%.fo.pdf: build/%.xml ../../src/schspec-iso/style/default/schspec-iso-fo.xsl ../../src/schspec-iso/fopconfig.xml
 	fop -c ../../src/schspec-iso/fopconfig.xml "$<" "$@"
+
+build/%.pdf: build/%.tex
+	(cd build; context "$(patsubst build/%.tex,%.tex,$<)"; )
+
+build/%.tex: build/%.xml
+	echo "\xdef\ArgInput{$(patsubst build/%.xml,%.xml,$<)}" > "$@.tmp"
+	echo "\xdef\FigPath{}" >> "$@.tmp"
+	echo '\input{../../../src/schspec-iso/style/context/schspec-iso.tex}' >> "$@.tmp"
+	mv "$@.tmp" "$@"
