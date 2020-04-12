@@ -1,0 +1,581 @@
+default namespace = "https://www.devever.net/ns/schspec"
+namespace mml = "http://www.w3.org/1998/Math/MathML"
+
+## Document-Level Constructs                                                {{{1
+################################################################################
+start = top
+
+## The <top> element is always the root element. This contains one or more
+## documents, generally only one. By not making <doc> the root element we can
+## allow schspec to contain multiple documents in one file, if this is ever
+## subsequently desired. This also enables control information not part of
+## the document itself to be stored.
+top = element top {
+  doc+
+}
+
+## The <doc> element is the root element of a logical document. A document is
+## split into control information (analagous to XHTML <head/>) and the body
+## (analagous to XHTML <body/>).
+doc = element doc {
+  attribute kind { string "iso-specification" | string "iso-standard" },
+
+  ## The control information comprises metadata which does not appear in the
+  ## document body itself, and should not necessarily be rendered.
+  element docctl {
+    docinfo?
+  },
+
+  ## The document body contains block-type constructs, which themselves contain
+  ## other block-type constructs or inline-type constructs. The top-level
+  ## block-type constructs within a docbody must be sections.
+  element docbody {
+    docinfo?,
+    element doccontent {
+      #TOC?,
+      #TOT?, TOF?,
+      element docfront {
+        foreword?,
+        introduction?
+      },
+      element docproper {
+        doctitle?,
+        element docmain {
+          titledClause*
+        },
+        element docannex {
+          annex*
+        }?
+      },
+      element docafter {
+        bibliography?
+      }?
+    }
+  }
+}
+
+
+## Document Metadata                                                        {{{1
+################################################################################
+
+## Document information.
+docinfo = element docinfo {
+  ## The title of the document.
+  doctitle?,
+  ## Document identifier.
+  docid?,
+  ## Document edition.
+  docedition?,
+  ## Document timestamp.
+  doctimestamp?
+}
+
+## Document title, optionally structured.
+doctitle = element doctitle {
+  text | ((sp?, doctitleelem)+, sp?)
+}
+
+## Element of a document title. This can be used to build the structured
+## document titles used by ISO specifications (e.g. "Introductory Element —
+## Main Element — Part 1: Complementary Element").
+doctitleelem = element doctitleelem {
+  text | (
+    ## Where the title element is of the form "Part X: ...", this structured
+    ## form should be used instead of the unstructured form.
+    element partpfx {
+      ## Optional prefix. This should generally contain "Part ".
+      sp?,
+      ## Part number string.
+      element pno { text },
+      ## Optional suffix. This should generally contain ": ".
+      sp?
+    },
+    ## Title of the part.
+    element parttitle { text }
+  )
+}
+
+## The docid is an alphanumerical unique document identifier, usually something like
+## "ISO/IEC 12345-1:2020" or "RFC 1234". It can optionally be substructured into
+## base and revision parts.
+docid = element docid {
+  text | (
+    sp?,
+    element docidbase { text },
+    sp?,
+    element docidrev { text }?,
+    sp?
+  )
+}
+
+## Specifies the edition of the document.
+docedition = element docedition { text }
+
+## Specifies the timestamp of the document.
+doctimestamp = element doctimestamp { xsd:dateTime }
+
+
+## Structural Constructs                                                    {{{1
+################################################################################
+
+foreword = element preface {
+  attribute type { string "foreword" },
+  attribute kind { string "informative" },
+  anonTitledHdr,
+  (unnumberedSec* | BLOCK*)
+}
+
+introduction = element preface {
+  attribute type { string "introduction" },
+  attribute kind { string "informative" },
+  anonTitledHdr,
+  (unnumberedSec* | BLOCK*)
+}
+
+bibliography = element afterchapter {
+  attribute type { string "bibliography" },
+  attribute kind { string "informative" },
+  anonTitledHdr,
+  (unnumberedSec* | BLOCK*)
+}
+
+## A titled clause (or subclause) has a number and title. It may contain either
+## a sequence of titled clauses, a sequence of untitled clauses, XXX, or a
+## sequence of block-level constructs (but not a mixture of those).
+titledClause = element clause {
+  ## Unchecked: Numbering must match ancestors.
+  attribute number { xsd:string { pattern = "([A-Z]\.)?(0|[1-9][0-9]*)(\.[1-9][0-9]*){0,5}" } },
+  ## Optional. Specifies the last element of the number. @number can be reconstructed
+  ## from this (or vice versa).
+  attribute ordinal { xsd:nonNegativeInteger }?,
+  attribute kind { string "normative" | string "informative" },
+  attribute id { xsd:ID }?,
+  titledHdr,
+  (untitledClause* | titledClause* | (BLOCK*, termdef*))
+}
+
+## An untitled subclause has a number but no title. It contains either a
+## sequence of untitled subclauses, or a sequence of block-level constructs, but
+## not a mixture of the two. Top-level clauses must always be titled, so untitled
+## clauses are always subclauses.
+untitledClause = element uclause {
+  ## Unchecked: Numbering must match ancestors.
+  attribute number { text },
+  ## Optional. Specifies the last element of the number. @number can be reconstructed
+  ## from this (or vice versa).
+  attribute ordinal { xsd:nonNegativeInteger }?,
+  attribute kind { string "normative" | string "informative" },
+  attribute id { xsd:ID }?,
+  untitledHdr,
+  (untitledClause* | BLOCK*)
+}
+
+## An annex has a number and a title. It may contain either a sequence of
+## titled clauses, or a sequence of block-level constructs, but not a mixture
+## of the two
+annex = element annex {
+  attribute number { xsd:string { pattern = "[A-Z]" } },
+  attribute kind { string "normative" | string "informative" },
+  attribute id { xsd:ID }?,
+  titledHdr,
+  (titledClause* | BLOCK*)
+}
+
+## The frontmatter (foreword, introduction) may be grouped into headed
+## sections. These are called sections rather than clauses and are unnumbered
+## but titled.
+unnumberedSec = element asec {
+  anonTitledHdr,
+  (unnumberedSec* | BLOCK*)
+}
+
+## A hdr is used to markup numbering and title information on some block-level
+## element.
+titledHdr = element hdr {
+  ## If any punctuation prefix should appear before the number, it
+  ## should be placed in this element.
+  element pfx { text }?,
+
+  ## If the block-level element being marked up is numbered, the number
+  ## should be repeated here.
+  element number { text }?,
+
+  ## If any spacing or punctuation should appear between the number
+  ## and the title, it should be placed in this element.
+  element sp { text }?,
+
+  ## The title itself.
+  element title { text },
+
+  ## Optional suffix punctuation.
+  element sfx { text }?
+}
+
+## If a hdr lacks a title element, it constitutes an untitled title
+## block.
+untitledHdr = element uhdr {
+  element pfx { text }?,
+  element number { text },
+  element sp { text }?,
+  element sfx { text }?
+}
+
+## A hdr which is titled but not numbered is an anonymous titled header.
+anonTitledHdr = element ahdr {
+  element pfx { text }?,
+  element title { text },
+  element sfx { text }?
+}
+
+## A termdef defines an item of terminology.
+termdef = element termdef {
+  ## The sym should be an identifier (free of spaces) which uniquely identifies
+  ## the item of terminology. By convention, if the sym is formed from the
+  ## title of the termdef, the singular form should be used.
+  attribute sym { text },
+  titledHdr,
+  BLOCK*
+}
+
+
+## Block-Level Constructs                                                   {{{1
+################################################################################
+BLOCK = (p | ul | ol | figure | table | mathb | note | example | GRBLOCK)
+
+## Many block-level constructs may contain either block-level constructs, or
+## inline-level constructs. However, they do not allow them to be mixed within
+## any given element.
+FLEX = (INLINE* | BLOCK*)
+
+## A paragraph. Contains only inline-level constructs.
+p = element p {
+  INLINE*
+}
+
+## An unordered list. May contain only <li> elements, which constitute
+## the elements of the list. These elements have flex contents.
+ul = element ul {
+  li*
+}
+
+## An ordered list. May contain only <li> elements, which constitute
+## the elements of the list. These elements have flex contents.
+ol = element ol {
+  li*
+}
+
+## A list item in an ordered or unordered list.
+li = element li {
+  attribute id { xsd:ID }?,
+  attribute number { text }?,
+  FLEX
+}
+
+## A figure. This is a block-level construct which is numbered as being "Figure
+## 1", etc. and doesn't necessarily imply any kind of drawing; it could contain
+## more text, for example. May be combined with other elements, such as <fig>,
+## to facilitate graphics.
+figure = element figure {
+  attribute id { xsd:ID }?,
+  attribute number { text },
+  titledHdr,
+  BLOCK*,
+  note*
+}
+
+## A table.
+table = element table {
+  attribute id { xsd:ID }?,
+  attribute number { text },
+  titledHdr,
+  (BLOCK | tabular)*,
+  note*,
+  tablekey?
+}
+
+## Key to a table.
+tablekey = element tablekey {
+  FLEX
+}
+
+## Block math.
+mathb = element mathb {
+  attribute id { xsd:ID }?,
+  attribute number { text }?,
+  attribute alttex { text }?,
+  (text | mmlany*)
+}
+
+## A note. Flex contents; may contain either only inline-level constructs, or
+## only block-level constructs.
+note = element note {
+  attribute id { xsd:ID }?,
+  attribute number { text },
+  FLEX
+}
+
+## An example.
+example = element example {
+  attribute id { xsd:ID }?,
+  attribute number { text },
+  FLEX
+}
+
+
+## Block-Level Constructs: Tabulars                                         {{{1
+################################################################################
+
+## Actual table structure, to be used inside table elements.
+tabular = element tabular {
+  tr*
+}
+
+## Table row.
+tr = element tr {
+  (td | th)*
+}
+
+## Non-heading table cell.
+td = element td {
+  attribute colspan { xsd:nonNegativeInteger }?,
+  attribute rowspan { xsd:nonNegativeInteger }?,
+  FLEX
+}
+
+## Heading table cell.
+th = element th {
+  attribute colspan { xsd:nonNegativeInteger }?,
+  attribute rowspan { xsd:nonNegativeInteger }?,
+  FLEX
+}
+
+
+## Block-Level Constructs: Graphics and Visualisation                       {{{1
+################################################################################
+GRBLOCK = (fig | regblock)
+
+## A graphic. The graphic may be produced by arbitrary processing. As such,
+## the <fig> is structured in terms of source, builds, and outputs. See below
+## for the details on each of these.
+fig = element fig {
+  ## The type of the <fig>. This is a somewhat ad-hoc string which should
+  ## generally indicate what tool has been used to build the figure (e.g.
+  ## "dot").
+  attribute type { text },
+  ## List of build processes which produce the various output artefacts.
+  element fig-builds {
+    ## Each build process produces one output artefact, based on a specified
+    ## command line.
+    element fig-build {
+      ## The nature of the build process. The only currently supported value
+      ## is "cmd/file", which indicates a command should be executed
+      ## according to fig-build-cmd.
+      element fig-build-type { string "cmd/file" },
+      ## The output MIME type.
+      element fig-build-output-type { text },
+      ## The command line run to build the output artefact. The command should
+      ## output the figure output data to stdout.
+      element fig-build-cmd { text }?
+    }*
+  },
+  ## The source code for the figure.
+  element fig-src { text },
+  ## List of output artefacts.
+  element fig-outputs {
+    ## Each output artefact comprises an (href, type) pair.
+    ## The href is an URI to the built output, and the type is a MIME type
+    ## expressing the type of the artefact.
+    element fig-output {
+      attribute href { text },
+      attribute type { text }
+    }*
+  }
+}
+
+## A register block, useful for typesetting register manuals.
+regblock = element regblock {
+  ## Each register block should have a mnemonic, which should contain no spaces
+  ## and should generally be in uppercase.
+  element mnem { text },
+  ## A human-readable, title-case description of the register block.
+  element title { text },
+  ## Each register in the register block is described by a <reg> element.
+  element reg {
+    # TODO: Fix nondeterministic ordering of these elements.
+    element mnem { text },
+    (element title { text }? &
+    element rb-offset { text } &
+    rb-width &
+    rb-access? &
+    element reset { text }?),
+    element desc { FLEX* }?,
+    element field {
+      element mnem { text }?,
+      bitrange,
+      (rb-access? & element rb-title { text }?),
+      element rb-desc { FLEX* }?,
+      element reset { text }?,
+      element enum {
+        ## TODO: fix this
+        (text | element title { text })*
+      }*
+    }*
+  }*
+}
+
+## Expresses a range of bits, used by regblock.
+bitrange = element bitrange {
+  ## If a single bit is represented by a bitrange, br-single should be used,
+  ## which must contain the integer bit number.
+  element br-single { xsd:nonNegativeInteger } |
+  ## Otherwise, a range must be specified using br-lo and br-hi, which contain
+  ## the low and high bit numbers (inclusive) of the bit range.
+  (element br-lo { xsd:nonNegativeInteger }, element br-hi { xsd:nonNegativeInteger })
+}
+
+## Expresses the width of a register or field in bits.
+rb-width = element rb-width { xsd:integer }
+
+## Expresses how a register many be accessed.
+rb-access = element rb-access {
+  ## The register or field is read-only. For registers, attempting to write
+  ## this register causes undefined behaviour. For fields, attempting to write
+  ## this field in a register which is not read-only results in no change to the
+  ## field.
+  string "ro" |
+  ## The register or field is readable and writable.
+  string "rw" |
+  ## The register or field is readable, but writing any bit of it as 1 causes
+  ## that bit to be cleared to 0 if it was set, and leaves it unchanged
+  ## otherwise. # Writing 0 bits has no effect.
+  string "rw1c" |
+  ## The register or field is readable, but writing any bit of it as 1 causes
+  ## that bit to be set to 1 if it was previously zero. Writing any bit as 0
+  ## has no effect. This can be used to set bits in a register without having
+  ## to read it first (e.g. for interrupt mask/unmask registers).
+  string "rw1s" |
+  ## The register or field is write-only. Reading the register returns an
+  ## undefined value and may also cause undefined behaviour.
+  string "wo" |
+  ## The register must not be accessed.
+  string "none"
+}
+
+
+## Inline-Level Constructs                                                  {{{1
+################################################################################
+INLINE = (text | em | tt | proword | procn | kw | term | iref | math | footnote
+        | footnoteref)
+
+## Emphasis (generally represented as italics). Generally, use of this should
+## be avoided.
+em = element em {
+  INLINE*
+}
+
+## Typeset in monospace. Avoid using this if a semantically meaningful element
+## is available.
+tt = element tt {
+  INLINE*
+}
+
+## A proword is used to indicate a normative requirement of a standard
+proword = element proword {
+  ## The proword type. This must be a value supported by the conventions of
+  ## the standards body in question.
+  attribute type {
+    # ISO
+    string "shall" |
+    string "shall-not" |
+    string "should" |
+    string "should-not" |
+    string "may" |
+    string "may-not" |
+    string "must" |
+    string "must-not"
+  },
+
+  ## The proword text. This should generally be the same value for every #
+  ## instance of a proword with a given type attribute, though variations may be
+  ## permitted. Often it will be the type value with hyphens changed for
+  ## spaces.
+  INLINE*
+}
+
+## A procedure name. Used to reference a procedure by name in prose.
+procn = element procn {
+  ## The name of the procedure.
+  INLINE*
+}
+
+## A keyword. Usually typeset in monospace.
+kw = element kw {
+  INLINE*
+}
+
+## Use of a term in prose. Used to properly reference the item of terminology
+## at its definition site.
+term = element term {
+  ## The termdef symbol. This can be used for generating URIs to the termdef.
+  attribute sym { text },
+  ## Whether this particular instance of usage of the term is singular or
+  ## plural.
+  attribute sp { string "singular" | string "plural" }?,
+  ## The definition of the term, or a summary thereof. Optional, but useful for
+  ## producing hover text in XHTML representations.
+  attribute desc { text }?,
+  ## The term title. This should be the same as that given in the termdef, or its
+  ## plural variant.
+  INLINE*
+}
+
+## Internal reference to another clause or subclause.
+iref = element iref {
+  ## Specifies the sec id attribute value of the clause or subclause referenced.
+  attribute iref { xsd:IDREF },
+  attribute kind { string "clause" | string "table" | string "figure" },
+  ## Text of the hyperlink.
+  INLINE*
+}
+
+## Inline math.
+math = element math {
+  ## TeX alternative for MathML. Overrides MathML for TeX output producers.
+  attribute alttex { text }?,
+
+  ## Assumed TeX.
+  (text |
+  ## MathML.
+  mmlany*)
+}
+
+mmlany = element mml:* {
+  attribute * { text },
+  (element mml:* { mmlany } | text)*
+}
+
+## Footnote.
+footnote = element footnote {
+  attribute id { xsd:ID }?,
+  attribute label { text }?,
+  ## REQ: shall not contain prowords
+  BLOCK*
+}
+
+## Reference to already instantiated footnote.
+footnoteref = element footnoteref {
+  attribute iref { xsd:ID }?,
+  ## Label.
+  text
+}
+
+## Utilities                                                                {{{1
+################################################################################
+
+## The sp element is semantically meaningless and is used to contain glue
+## punctuation used to make the representation of the document, if converted to
+## plain text by virtue of being stripped of all elements and attributes, more
+## readable. Use of this element for this purpose is optional.
+sp = element sp {
+  text
+}
