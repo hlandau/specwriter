@@ -3,7 +3,7 @@
 %\xmlregisterns{mml}
 
 \startxmlsetups xs:base
-  \xmlsetsetup{#1}{s:top|s:doc|s:clause|s:annex|s:termdef|s:term|s:hdr|s:ul|s:ol|s:li|s:procn|s:proword|s:p|s:fig|s:fig-output|s:figure|s:docmain|s:docannex|s:regblock|s:reg|s:field|s:bitrange}{xs:*}
+  \xmlsetsetup{#1}{s:top|s:doc|s:clause|s:annex|s:termdef|s:term|s:iref|s:hdr|s:ul|s:ol|s:li|s:procn|s:proword|s:p|s:fig|s:fig-output|s:figure|s:docmain|s:docannex|s:regblock|s:reg|s:field|s:bitrange}{xs:*}
   \xmlsetsetup{#1}{s:clause/s:clause}{xs:clause2}
   \xmlsetsetup{#1}{s:clause/s:clause/s:clause}{xs:clause3}
   \xmlsetsetup{#1}{s:clause/s:clause/s:clause/s:clause}{xs:clause4}
@@ -22,7 +22,11 @@
 \startxmlsetups xs:doc
   \xdef\DocTitle{\xmltext{#1}{/s:docctl/s:docinfo/s:doctitle}}
   \setvariables[document][title={\DocTitle}]
+
+  % Enable hyperlinking of contents, etc.
   \setupinteraction[state=start,color=,contrastcolor=,style=normal,title={\DocTitle},author={Hugo Landau}]
+  \setupinteractionscreen[option=bookmark]
+  \placebookmarks[chapter,section,subsection,subsubsection]
 
 
   %% Cover Page                                                             {{{1
@@ -110,32 +114,38 @@
 \stopxmlsetups
 
 \startxmlsetups xs:clause
-  \chapter{\xmlfirst{#1}{/s:hdr/s:title}}
+  \chapter[clause:\xmlattribute{#1}{.}{id}]{\xmlfirst{#1}{/s:hdr/s:title}}
+  %\reference[clause:\xmlattribute{#1}{.}{id}]{DaDa}
   \xmlflush{#1}
 \stopxmlsetups
 
 \startxmlsetups xs:clause2
-  \section{\xmlfirst{#1}{/s:hdr/s:title}}
+  \section[clause:\xmlattribute{#1}{.}{id}]{\xmlfirst{#1}{/s:hdr/s:title}}
+  %\reference[clause:\xmlattribute{#1}{.}{id}]{DaDa}
   \xmlflush{#1}
 \stopxmlsetups
 
 \startxmlsetups xs:clause3
-  \subsection{\xmlfirst{#1}{/s:hdr/s:title}}
+  \subsection[clause:\xmlattribute{#1}{.}{id}]{\xmlfirst{#1}{/s:hdr/s:title}}
+  %\reference[clause:\xmlattribute{#1}{.}{id}]{DaDa}
   \xmlflush{#1}
 \stopxmlsetups
 
 \startxmlsetups xs:clause4
-  \subsubsection{\xmlfirst{#1}{/s:hdr/s:title}}
+  \subsubsection[clause:\xmlattribute{#1}{.}{id}]{\xmlfirst{#1}{/s:hdr/s:title}}
+  %\reference[clause:\xmlattribute{#1}{.}{id}]{DaDa}
   \xmlflush{#1}
 \stopxmlsetups
 
 \startxmlsetups xs:clause5
-  \subsubsubsection{\xmlfirst{#1}{/s:hdr/s:title}}
+  \subsubsubsection[clause:\xmlattribute{#1}{.}{id}]{\xmlfirst{#1}{/s:hdr/s:title}}
+  %\reference[clause:\xmlattribute{#1}{.}{id}]{DaDa}
   \xmlflush{#1}
 \stopxmlsetups
 
 \startxmlsetups xs:annex
-  \chapter{\xmlfirst{#1}{/s:hdr/s:title}}
+  \chapter[clause:\xmlattribute{#1}{.}{id}]{\xmlfirst{#1}{/s:hdr/s:title}}
+  %\reference[clause:\xmlattribute{#1}{.}{id}]{DaDa}
   \xmlflush{#1}
 \stopxmlsetups
 
@@ -181,6 +191,12 @@
 
 \startxmlsetups xs:term
   \goto{\color[termgreen]{\xmlflush{#1}}}[term:\xmlattribute{#1}{.}{sym}]
+\stopxmlsetups
+
+\startxmlsetups xs:iref
+  \goto{§ \ref[number][clause:\xmlattribute{#1}{.}{iref}] (\ref[title][clause:\xmlattribute{#1}{.}{iref}])}[clause:\xmlattribute{#1}{.}{iref}]
+  %\in{§}{ (\about[clause:\xmlattribute{#1}{.}{iref}])}[clause:\xmlattribute{#1}{.}{iref}] 
+  %\goto{\about[clause:\xmlattribute{#1}{.}{iref}]}[clause:\xmlattribute{#1}{.}{iref}]
 \stopxmlsetups
 
 \startxmlsetups xs:p
@@ -266,10 +282,10 @@
   rightmargin=5\bodyfontsize
 ]
 
-% Enable hyperlinking of contents, etc.
-%\setupinteraction[state=start,color=,contrastcolor=,title={Lorem Ipsum},author={Hugo Landau}]
-\setupinteractionscreen[option=bookmark]
-\placebookmarks[chapter,section,subsection,subsubsection]
+\setupstructure[state=start,method=auto]
+\setupbackend[export=yes]
+%\setupbackend[intent=ISO Uncoated,format=PDF/A-2a]
+\setupreferencing[left={},right={}]
 
 % Colours.
 \setupcolors[state=start]

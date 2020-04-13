@@ -31,7 +31,7 @@ build/%.fo.pdf: build/%.xml ../../src/schspec-iso/style/default/schspec-iso-fo.x
 build/%.pdf: build/%.tex
 	(cd build; context "$(patsubst build/%.tex,%.tex,$<)"; )
 
-build/%.tex: build/%.xml
+build/%.tex: build/%.xml ../../src/schspec-iso/style/context/schspec-iso.tex
 	echo "\xdef\ArgInput{$(patsubst build/%.xml,%.xml,$<)}" > "$@.tmp"
 	echo "\xdef\FigPath{}" >> "$@.tmp"
 	echo '\input{../../../src/schspec-iso/style/context/schspec-iso.tex}' >> "$@.tmp"
